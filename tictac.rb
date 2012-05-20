@@ -3,7 +3,7 @@ $board = {
 	'4' => '4', '5' => '5', '6' => '6',
 	'7' => '7', '8' => '8', '9' => '9'
 }
-board_graphic = ''
+# board_graphic = ''
 $turns = 1
 
 class Player
