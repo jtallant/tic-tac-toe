@@ -3,6 +3,7 @@ $board = {
 	'4' => '4', '5' => '5', '6' => '6',
 	'7' => '7', '8' => '8', '9' => '9'
 }
+
 $turns = 1
 
 class Player
@@ -10,7 +11,6 @@ class Player
 	def initialize(name, id)
 		@id = id
 		@name = name
-		# @board = board
 	end
 
 	def move(board, move_position)
@@ -59,12 +59,28 @@ def game_controller(board,player_one,player_two)
 end
 
 def check_for_winner(board, player)
+	winning_sections = [
+		[board['1'],board['2'],board['3']],
+		[board['4'],board['5'],board['6']],
+		[board['7'],board['8'],board['9']],
+		[board['1'],board['4'],board['7']],
+		[board['2'],board['5'],board['8']],
+		[board['3'],board['6'],board['9']],
+		[board['1'],board['5'],board['9']],
+		[board['7'],board['5'],board['3']]
+	]
 	
-	if board['1'] == board['2'] && board['2'] == board['3']
-		show_board
-		puts "#{player.name} WINS!!!"
-		Process.exit
+	winning_sections.each do |section|
+		if check_equal($board,section) == true
+			show_board
+			puts "#{player.name} WINS!!!"
+			Process.exit
+		end
 	end
+end
+
+def check_equal(board, array)
+	array.uniq == ['X'] || array.uniq == ['O']
 end
 
 def welcome(board)
