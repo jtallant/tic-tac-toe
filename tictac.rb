@@ -14,19 +14,12 @@ class Player
 		# @board = board
 	end
 
-	def move(board,player_one,player_two)
-		input = gets.chomp
-		if input.to_i < 1 || input.to_i > 9
-			puts "You must put a number between 0 and 10."
-			game_controller($board,player_one,player_two)
-		end
+	def move(board, move_position)
 		if @id == 1
-			$board["#{input}"] = 'X'
+			$board["#{move_position}"] = 'X'
 		else
-			$board["#{input}"] = 'O'
+			$board["#{move_position}"] = 'O'
 		end
-		$turns += 1
-		game_controller($board,player_one,player_two)
 	end
 end
 
@@ -46,13 +39,20 @@ end
 
 
 def game_controller(board,player_one,player_two)
-	show_board
-	if $turns.odd?
-		puts "Your move #{player_one.name}"
-		player_one.move($board, player_one, player_two)
-	else
-		puts "Your move #{player_two.name}"
-		player_two.move($board, player_one, player_two)
+	while true
+		show_board
+		$turns.odd? ? player = player_one : player = player_two
+		puts "Your move #{player.name}"
+		input = gets.chomp
+		case
+		when input == 'q'
+			break
+		when input.match(/[1-9]/)
+			player.move($board, input)
+			$turns +=1
+		else
+			puts 'invalid input'
+		end
 	end
 end
 
