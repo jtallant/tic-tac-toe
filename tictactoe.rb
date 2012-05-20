@@ -23,6 +23,7 @@ class Player
 end
 
 def show_board
+	puts $turns
 	board_graphic  = "\n"
 	board_graphic += "     |     |     \n"
 	board_graphic += "  #{$board["1"]}  |  #{$board["2"]}  |  #{$board["3"]}  \n"
@@ -54,11 +55,15 @@ def game_controller(board,player_one,player_two)
 			player.move($board, input)
 			$turns += 1
 		end
-		check_for_winner($board, player)
+		check_for_endgame($board, player, player_one, player_two)
 	end
 end
 
-def check_for_winner(board, player)
+def check_equal(board, array)
+	array.uniq == ['X'] || array.uniq == ['O']
+end
+
+def check_for_endgame(board, player, player_one, player_two)
 	winning_sections = [
 		[board['1'],board['2'],board['3']],
 		[board['4'],board['5'],board['6']],
@@ -74,13 +79,37 @@ def check_for_winner(board, player)
 		if check_equal($board,section) == true
 			show_board
 			puts "#{player.name} WINS!!!"
-			Process.exit
+			play_again(player_one, player_two)
+		elsif $turns == 10
+			show_board
+			puts 'CAT game, no possible winner'
+			play_again(player_one, player_two)
 		end
 	end
 end
 
-def check_equal(board, array)
-	array.uniq == ['X'] || array.uniq == ['O']
+def reset_game
+	$board = {
+		'1' => '1', '2' => '2', '3' => '3',
+		'4' => '4', '5' => '5', '6' => '6',
+		'7' => '7', '8' => '8', '9' => '9'
+	}
+	$turns = 1
+end
+
+def play_again(player_one,player_two)
+	puts 'Would you like to play again? (yes/no)'
+	input = gets.chomp
+	if input == 'yes'
+		reset_game
+		game_controller($board,player_one,player_two)
+	elsif input == 'no'
+		puts 'Goodbye'
+		Process.exit
+	else
+		puts 'Invalid input'
+		play_again
+	end
 end
 
 def welcome(board)
