@@ -3,7 +3,6 @@ $board = {
 	'4' => '4', '5' => '5', '6' => '6',
 	'7' => '7', '8' => '8', '9' => '9'
 }
-# board_graphic = ''
 $turns = 1
 
 class Player
@@ -47,12 +46,23 @@ def game_controller(board,player_one,player_two)
 		case
 		when input == 'q'
 			break
-		when input.match(/[1-9]/)
-			player.move($board, input)
-			$turns +=1
-		else
+		when input.empty? || input.length > 1 || input.match(/[^1-9]/)
 			puts 'invalid input'
+		when $board["#{input}"].match(/[^1-9]/)
+			puts 'That position is already taken'
+		else
+			player.move($board, input)
+			$turns += 1
 		end
+		check_for_winner($board, player)
+	end
+end
+
+def check_for_winner(board, player)
+	if board['1'] == board['2'] && board['2'] == board['3']
+		show_board
+		puts "#{player.name} WINS!!!"
+		Process.exit
 	end
 end
 
