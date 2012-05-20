@@ -1,105 +1,81 @@
-class Board
-	attr_accessor :squares
-	def initialize
-		@squares = {
-			'1' => ' ', '2' => ' ', '3' => ' ',
-			'4' => ' ', '5' => ' ', '6' => ' ',
-			'7' => ' ', '8' => ' ', '9' => ' '
-		}
-	end
-end
+$board = {
+	'1' => '1', '2' => '2', '3' => '3',
+	'4' => '4', '5' => '5', '6' => '6',
+	'7' => '7', '8' => '8', '9' => '9'
+}
+$turns = 1
 
 class Player
-	attr_accessor :name, :board
+	attr_accessor :name, :id
 	def initialize(name, id)
 		@id = id
 		@name = name
-		@board = Board.new
+		# @board = board
 	end
 
-	def move(square)
-		if square.to_i < 1 || square.to_i > 9
-			puts "You must put a number between 0 and 7."
-			return
-		end
+	def move(board, move_position)
 		if @id == 1
-			@board.squares["#{square}"] = 'X'
+			$board["#{move_position}"] = 'X'
 		else
-			@board.squares["#{square}"] = 'O'
+			$board["#{move_position}"] = 'O'
 		end
-		$turns += 1
 	end
 end
 
-def game_controller
-	$turn = 0
-
-	puts 
-
-	if $turn.odd?
-		puts "Your move #{player_one.name}"
-
-	else
-		# player two update board
-	end
-
+def show_board
+	board_graphic  = "\n"
+	board_graphic += "     |     |     \n"
+	board_graphic += "  #{$board["1"]}  |  #{$board["2"]}  |  #{$board["3"]}  \n"
+	board_graphic += "_____|_____|_____\n"
+	board_graphic += "     |     |     \n"
+	board_graphic += "  #{$board["4"]}  |  #{$board["5"]}  |  #{$board["6"]}  \n"
+	board_graphic += "_____|_____|_____\n"
+	board_graphic += "     |     |     \n"
+	board_graphic += "  #{$board["7"]}  |  #{$board["8"]}  |  #{$board["9"]}  \n"
+	board_graphic += "\n"
+	puts board_graphic
 end
 
-def welcome
+
+def game_controller(board,player_one,player_two)
+	while true
+		show_board
+		$turns.odd? ? player = player_one : player = player_two
+		puts "Your move #{player.name}"
+		input = gets.chomp
+		case
+		when input == 'q'
+			break
+		when input.empty? || input.length > 1 || input.match(/[^1-9]/)
+			puts 'invalid input'
+		when $board["#{input}"].match(/[^1-9]/)
+			puts 'That position is already taken'
+		else
+			player.move($board, input)
+			$turns += 1
+		end
+		check_for_winner($board, player)
+	end
+end
+
+def check_for_winner(board, player)
+	
+	if board['1'] == board['2'] && board['2'] == board['3']
+		show_board
+		puts "#{player.name} WINS!!!"
+		Process.exit
+	end
+end
+
+def welcome(board)
 	puts ''
 	puts 'Welcome to Tic-Tac-Toe.'
 	puts ''
 	puts "Enter player one's name:"
-	puts "Enter player one's name:"
 	player_one = Player.new(gets.chomp, 1)
 	puts "Enter player two's name:"
 	player_two = Player.new(gets.chomp, 2)
-
-	game_controller
+	game_controller($board,player_one,player_two)
 end
 
-
-
-# puts player_one.name
-
-# puts player_two.name
-
-board  = "     |     |     \n"
-board += "     |     |     \n"
-board += "_____|_____|_____\n"
-board += "     |     |     \n"
-board += "     |     |     \n"
-board += "_____|_____|_____\n"
-board += "     |     |     \n"
-board += "     |     |     \n"
-board += "     |     |     \n"
-puts ''
-puts ''
-
-puts board 
-# puts "Your move #{player_one.name}. Select a square."
-
-puts ''
-puts ''
-
-puts "     |     |     "
-puts "  1  |  2  |  3  "
-puts "_____|_____|_____"
-puts "     |     |     "
-puts "  4  |  5  |  6  "
-puts "_____|_____|_____"
-puts "     |     |     "
-puts "  7  |  8  |  9  "
-puts "     |     |     "
-
-# square = gets.chomp
-
-# player_one.move(square)
-
-# puts player_one.board.squares["1"]
-
-# square = gets.chomp
-
-# player_two.move(square)
-
-# puts player_two.board.squares["1"]
+welcome($board)
