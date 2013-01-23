@@ -73,7 +73,7 @@ def check_for_endgame(board, player, player_one, player_two)
     [board['1'],board['5'],board['9']],
     [board['7'],board['5'],board['3']]
   ]
-	
+  
   winning_sections.each do |section|
     if check_equal($board,section) == true
       show_board
