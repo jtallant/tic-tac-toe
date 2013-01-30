@@ -1,4 +1,47 @@
+# TODO: Break out all the AI into Computer_Opponent class
+
 class Game_Controller
+
+  P1_SYMBOL = 'X'
+  P2_SYMBOL = 'O'
+
+  FINISHING_MOVES = [
+    [1, 2, 3],
+    [1, 3, 2],
+    [1, 4, 7],
+    [1, 5, 9],
+    [1, 7, 4],
+    [1, 9, 5],
+    [2, 3, 1],
+    [2, 5, 8],
+    [2, 8, 5],
+    [3, 5, 7],
+    [3, 6, 9],
+    [3, 7, 5],
+    [3, 9, 6],
+    [4, 5, 6],
+    [4, 6, 5],
+    [4, 7, 1],
+    [5, 6, 4],
+    [5, 7, 3],
+    [5, 8, 2],
+    [5, 9, 1],
+    [6, 9, 3],
+    [7, 8, 9],
+    [7, 9, 8],
+    [8, 9, 7]    
+  ]
+
+  LINES = [
+    [1, 2, 3],
+    [1, 4, 7],
+    [1, 5, 9],
+    [2, 5, 8],
+    [3, 5, 7],
+    [3, 6, 9],
+    [4, 5, 6],
+    [7, 8, 9]    
+  ]
 
   attr_accessor :board, :turns, :player_one, :player_two
 
@@ -16,8 +59,8 @@ class Game_Controller
 
   def colorize_position(position)
     position = position.to_s
-    return @board[position].color(:green) if @board[position] == 'X'
-    return @board[position].color(:red) if @board[position] == 'O'
+    return @board[position].color(:green) if @board[position] == P1_SYMBOL
+    return @board[position].color(:red) if @board[position] == P2_SYMBOL
     @board[position.to_s]
   end
 
@@ -43,13 +86,6 @@ class Game_Controller
     board_graphic += "  #{p7}  |  #{p8}  |  #{p9}  \n"
     board_graphic += "\n"
     board_graphic
-  end
-
-  def position_color(position)
-    if !is_not_taken?(position)
-      return position.color(:red)
-    end
-    return position
   end
 
   def play_game(new_game = false)
@@ -83,7 +119,7 @@ class Game_Controller
 
   def game_loop
     while true
-      # clear_screen
+      clear_screen
       puts board_graphic
       puts "Turn Number: #{@turns}"
       puts "Your move #{current_player.name}"
@@ -103,24 +139,13 @@ class Game_Controller
       update_board(@player_two, position)
     elsif position = doom_is_near?
       update_board(@player_two, position)
-    # make a fork is possible
     elsif position = fork_is_availabe?
       update_board(@player_two, position)
-    # block any possible fork
     elsif position = block_potential_fork
-      # puts position.empty?
-      # puts position
-      # puts position.nil?
-      # puts "Opponent could have forked at #{position}"
-      # Process.exit
       update_board(@player_two, position)
     elsif position = center_available?
       update_board(@player_two, position)
     elsif position = opposite_corner?
-      update_board(@player_two, position)
-    elsif position = empty_corner?
-      update_board(@player_two, position)
-    elsif position = empty_side?
       update_board(@player_two, position)
     else
       select_an_open_position
@@ -132,7 +157,6 @@ class Game_Controller
     false
   end
 
-  # TODO
   def opposite_corner?
     if is_owned_by_human?(1) && is_not_taken?(9)
       return 9
@@ -145,19 +169,6 @@ class Game_Controller
     end
   end
 
-  # TODO
-  def empty_corner?
-    false
-    # [1,3,7,9].each do |position|
-    #   return position if is_not_taken?(position)
-    # end
-  end
-
-  # TODO
-  def empty_side?
-    false
-  end
-
   def select_an_open_position
     [1,3,7,9,2,4,6,8,5].each do |position|
       if is_not_taken?(position)
@@ -167,14 +178,16 @@ class Game_Controller
     end
   end
 
+  # TODO: Make this smarter
+  # You could check each row for owning 2 of 3 positions
+  # Take the 3rd position if it is available
+  # Then you could get rid of the finishing moves constant
   def victory_at_hand?
-
-    finishing_moves.each do |position|
+    FINISHING_MOVES.each do |position|
       if is_owned_by_computer?(position[0]) && is_owned_by_computer?(position[1]) && is_not_taken?(position[2])
         return position[2]
       end 
     end
-
     false
   end
 
@@ -186,20 +199,44 @@ class Game_Controller
     line.all? {|position| !is_owned_by_computer?(position)}
   end
 
-  def block_potential_fork
-    lines.each do |first_line|
+  # TODO: Maybe combine this and block_potential_fork
+  def fork_is_availabe?
+    LINES.each do |first_line|
+      # next if they are all not owned
+      # you need at least one to create a fork
+      next if computer_has_no_position_in_line?(first_line)
 
-      # next if the opponent owns none of the positions in the row
-      # The opponenent cannot create a fork without owning at least 1 position in the row
+      # next if the enemy already owns one
+      # if the line blocked, you cannot create a fork
+      next if false == human_has_no_position_in_line?(first_line)
+
+      LINES.each do |second_line|
+        next if lines_are_equal?(first_line, second_line)
+        next if computer_has_no_position_in_line?(second_line)
+        next if false == human_has_no_position_in_line?(second_line)
+        intersection = first_line & second_line
+        return intersection[0] if !intersection.empty? && is_not_taken?(intersection[0])
+      end
+    end
+    false
+  end
+
+  def block_potential_fork
+    LINES.each do |first_line|
+
+      # next if the opponent owns none of the positions in the "line"
+      # The opponenent cannot create a fork without owning at least 1 position in the "line"
       next if human_has_no_position_in_line?(first_line)
 
-      # next if computer has already blocked (or owns at least 1) in the row
-      # the enemy cant fork if the computer already owns one in the row
+      # next if computer has already blocked (or owns at least 1) in the "line"
+      # the opponent cant fork if the computer already owns one in the "line"
       next if false == computer_has_no_position_in_line?(first_line)
 
-      lines.each do |second_line|
+      LINES.each do |second_line|
 
+        # Don't compare a line to itself
         next if lines_are_equal?(first_line, second_line)
+
         next if human_has_no_position_in_line?(second_line)
         next if false == computer_has_no_position_in_line?(second_line)
 
@@ -230,8 +267,6 @@ class Game_Controller
     return true if is_owned_by_human?(5) && is_owned_by_human?(9)
   end
 
-  # more than one fork, favor a corner
-
   # Returns true if blocking the fork will create one
   def block_will_create_fork?
     if is_owned_by_computer?(5)
@@ -244,97 +279,8 @@ class Game_Controller
     (line1 & line2).size == 3
   end
 
-  # Computer does not own at least one position in the line
-  # Return false if blocked
-  # Return line if unblocked
-  def is_unblocked?(line)
-    return false if is_owned_by_computer?(line[0]) || is_owned_by_computer?(line[1]) || is_owned_by_computer?(line[2])
-    line
-  end
-
-  # TODO check if lines are not blocked by enemy before trying to fork
-  # Right now you are just checking if you own at least one in the row
-  # Combine the fork methods?
-  def fork_is_availabe?
-    lines.each do |first_line|
-
-      # next if they are all not owned
-      # you need at least one to create a fork
-      next if computer_has_no_position_in_line?(first_line)
-
-      # next if the enemy already owns one
-      # if the line blocked, you cannot create a fork
-      next if false == human_has_no_position_in_line?(first_line)
-
-      lines.each do |second_line|
-
-        next if lines_are_equal?(first_line, second_line)
-        next if computer_has_no_position_in_line?(second_line)
-        next if false == human_has_no_position_in_line?(second_line)
-        intersection = first_line & second_line
-        return intersection[0] if !intersection.empty? && is_not_taken?(intersection[0])
-      end
-    end
-    false
-  end
-
-  # These are sets
-  # A intersect B
-  def lines
-    [
-      [1, 2, 3],
-      [1, 4, 7],
-      [1, 5, 9],
-      [2, 5, 8],
-      [3, 5, 7],
-      [3, 6, 9],
-      [4, 5, 6],
-      [7, 8, 9]
-    ]
-  end
-
-  # could probably check if own 2 out 3
-  # if so take the remaining one
-  # that way you dont need to check the same combination twice
-  # order matters
-  def finishing_moves
-    [
-      [1, 2, 3],
-      [1, 3, 2],
-      [1, 4, 7],
-      [1, 5, 9],
-      [1, 7, 4],
-      [1, 9, 5],
-
-      [2, 3, 1],
-      [2, 5, 8],
-      [2, 8, 5],
-
-      [3, 5, 7],
-      [3, 6, 9],
-      [3, 7, 5],
-      [3, 9, 6],
-
-      [4, 5, 6],
-      [4, 6, 5],
-      [4, 7, 1],
-
-      [5, 6, 4],
-      [5, 7, 3],
-      [5, 8, 2],
-      [5, 9, 1],
-
-      [6, 9, 3],
-
-      [7, 8, 9],
-      [7, 9, 8],
-
-      [8, 9, 7]
-    ]
-  end
-
   def doom_is_near?
-    finishing_moves.each do |position|
+    FINISHING_MOVES.each do |position|
       if is_owned_by_human?(position[0]) && is_owned_by_human?(position[1]) && is_not_taken?(position[2])
         return position[2]
       end
@@ -342,9 +288,8 @@ class Game_Controller
     false
   end
 
-  def is_owned_by_computer?(position, player = false)
-    player ||= @player_two
-    @board[position.to_s] == player.symbol
+  def is_owned_by_computer?(position)
+    @board[position.to_s] == @player_two.symbol
   end
 
   # returns true if the human player owns that position
@@ -353,7 +298,7 @@ class Game_Controller
   end
 
   def is_not_taken?(position)
-    @board[position.to_s] != 'X' && @board[position.to_s] != 'O'
+    @board[position.to_s] != P1_SYMBOL && @board[position.to_s] != P2_SYMBOL
   end
 
   def human_move(input, player)
@@ -386,13 +331,12 @@ class Game_Controller
 
   def winner?
     winning_sections.each do |section|
-      if section.uniq == [player_who_moved_last.symbol]
-        return true
-      end
+      return true if section.uniq == [player_who_moved_last.symbol]
     end
     false
   end
 
+  # TODO: Make Constant
   def winning_sections
     [
       [@board['1'], @board['2'], @board['3']],
@@ -411,13 +355,12 @@ class Game_Controller
   end
 
   def clear_screen
-    sleep 1
     system 'clear'
   end
 
   def check_for_endgame
     return if !winner? && !cat_game?
-    message = winner? ? "#{player_who_moved_last.name} WINS !!!" : 'CAT game, no possibe winner'
+    message = winner? ? "#{player_who_moved_last.name.upcase} WINS!!!" : 'CAT game, no possibe winner'
     clear_screen
     puts board_graphic
     puts message
@@ -433,7 +376,6 @@ class Game_Controller
     @turns = 1
   end
 
-  # Doing too much here
   def ask_to_play_again
     puts 'Would you like to play again? (yes/no)'
     input = gets.chomp
@@ -452,13 +394,13 @@ class Game_Controller
   def gather_player_data(number_players)
     if 1 == number_players
       puts "What is your name?"
-      @player_one = Player.new(gets.chomp, 'X')
-      @player_two = Player.new('Computer', 'O', true)
+      @player_one = Player.new(gets.chomp, P1_SYMBOL)
+      @player_two = Player.new('Computer', P2_SYMBOL, true)
     else
       puts "Enter player one's name:"
-      @player_one = Player.new(gets.chomp, 'X')
+      @player_one = Player.new(gets.chomp, P1_SYMBOL)
       puts "Enter player two's name:"
-      @player_two = Player.new(gets.chomp, 'O')
+      @player_two = Player.new(gets.chomp, P2_SYMBOL)
     end
   end
 end
