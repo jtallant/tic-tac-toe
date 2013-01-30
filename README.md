@@ -2,16 +2,23 @@
 
 A tic-tac-toe game played in the terminal.
 
+You can play against the computer or another human.
+
+The computer can't be beaten and will win if you do not play a perfect game.
+
 ## Usage
 
-Open a terminal and run `ruby lib/tic-tac-toe.rb` from inside the tic-tac-toe directory
+`git clone git@github.com:jtallant/tic-tac-toe.git`  
+`cd tic-tac-toe`  
+`bundle install`  
+`ruby lib/tic-tac-toe.rb`  
 
 ## Changelog
 
 #### 1.1
 
 * Moved everything into classes
-* set up project structure
+* Set up project structure
 
 #### 1.0
 
